@@ -111,7 +111,11 @@ export async function POST(request: Request) {
     return new Response(`Too many requests`, { status: 429 });
   }
 
-  const model = models.find((model) => model.id === modelId);
+  const model = process.env.CUSTOM_OPENAI_URL
+    ? {
+        apiIdentifier: process.env.CUSTOM_OPENAI_MODEL,
+      }
+    : models.find((model) => model.id === modelId);
 
   if (!model) {
     return new Response('Model not found', { status: 404 });
