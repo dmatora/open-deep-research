@@ -8,7 +8,7 @@ import { memo, useMemo, useState, useEffect } from 'react';
 import type { Vote } from '@/lib/db/schema';
 
 import { DocumentToolCall, DocumentToolResult } from './document';
-import { PencilEditIcon, SparklesIcon } from './icons';
+import {CopyIcon, PencilEditIcon, SparklesIcon} from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
@@ -16,7 +16,7 @@ import { Weather } from './weather';
 import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { SearchResults } from './search-results';
@@ -24,6 +24,8 @@ import { ExtractResults } from './extract-results';
 import { ScrapeResults } from './scrape-results';
 import { useDeepResearch } from '@/lib/deep-research-context';
 import { Progress } from './ui/progress';
+import {toast} from "sonner";
+import {useCopyToClipboard} from "usehooks-ts";
 
 const PurePreviewMessage = ({
   chatId,
@@ -162,6 +164,7 @@ const PurePreviewMessage = ({
     setDepth,
     updateProgress,
   ]);
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   return (
     <AnimatePresence>
@@ -226,6 +229,33 @@ const PurePreviewMessage = ({
                   })}
                 >
                   <Markdown>{message.content as string}</Markdown>
+                </div>
+              </div>
+            )}
+
+            {message && message.toolInvocations?.length > 0 && message.toolInvocations?.length && message.toolInvocations[0].state === 'result' && message.toolInvocations[0]?.result && (
+              <div className="flex flex-row gap-2 items-start">
+                <div className='flex flex-col gap-4'>
+                  <Markdown>{message.toolInvocations[0].result.data.analysis as string}</Markdown>
+                  <div className="message-actions flex flex-row gap-2 items-center">
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                              className="py-1 px-2 h-fit text-muted-foreground"
+                              variant="outline"
+                              onClick={async () => {
+                                await copyToClipboard(message.toolInvocations[0].result.data.analysis as string);
+                                toast.success('Copied to clipboard!');
+                              }}
+                          >
+                            <CopyIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               </div>
             )}
