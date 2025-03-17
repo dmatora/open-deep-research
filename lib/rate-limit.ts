@@ -1,6 +1,8 @@
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 
+const enableRateLimiting = process.env.ENABLE_RATE_LIMITING === 'true';
+
 // Create a new Redis instance
 export const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || '',
@@ -15,7 +17,7 @@ export const redis = new Redis({
 });
 
 // Create a new rate limiter that allows 5 requests per 60 seconds
-export const rateLimiter = new Ratelimit({
+export const rateLimiter = enableRateLimiting && new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(5, '60 s'),
   analytics: true,
